@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הסעות שישי · דבירה תשפ"ז</title>
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --card:#FFFFFF;
+    --ink:#1C2333;
+    --ink-soft:#5B6172;
+    --border:#E4E2DA;
+    --bus1:#2F6FED;
+    --bus1-bg:#E9F0FE;
+    --bus2:#B8860B;
+    --bus2-bg:#FBF1DA;
+    --bus3:#1F9D6B;
+    --bus3-bg:#E5F6EE;
+    --car:#6B5CA5;
+    --car-bg:#EFEBF7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI","Arial Hebrew","Heebo",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:24px 18px 60px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  header h1{
+    font-size:22px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:-0.2px;
+  }
+  header p{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .tabs{
+    display:flex;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:18px;
+  }
+  .tab-btn{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px 8px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink-soft);
+    border-radius:7px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .tab-btn.active{
+    background:var(--ink);
+    color:#fff;
+  }
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input[type="text"], select{
+    width:100%;
+    font-size:16px;
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--card);
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input[type="text"]:focus, select:focus{
+    outline:none;
+    border-color:var(--bus1);
+  }
+  .autocomplete-wrap{
+    position:relative;
+  }
+  .suggestions{
+    display:none;
+    position:absolute;
+    top:calc(100% + 4px);
+    right:0;
+    left:0;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:9px;
+    box-shadow:0 6px 18px rgba(28,35,51,0.10);
+    max-height:240px;
+    overflow-y:auto;
+    z-index:20;
+  }
+  .suggestions.open{ display:block; }
+  .suggestion-item{
+    padding:10px 12px;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .suggestion-item:not(:last-child){
+    border-bottom:1px solid var(--border);
+  }
+  .suggestion-item:hover, .suggestion-item.highlighted{
+    background:var(--bus1-bg);
+  }
+  .suggestions-empty{
+    padding:12px;
+    font-size:13px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14px;
+    padding:28px 10px;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    margin-top:8px;
+  }
+  .result-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .result-card .date-row{
+    font-size:14px;
+    font-weight:700;
+    margin-bottom:2px;
+  }
+  .result-card .shift-row{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:600;
+    padding:4px 10px 4px 4px;
+    border-radius:999px;
+    margin:0 0 6px;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;flex:none;
+  }
+  .role-line{
+    padding:9px 0;
+    border-top:1px solid var(--border);
+    font-size:14px;
+  }
+  .role-line:first-of-type{border-top:none;}
+  .role-name{
+    font-size:13px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:3px;
+  }
+  .role-val{
+    font-weight:600;
+  }
+  .role-phone{
+    display:block;
+    font-size:12.5px;
+    font-weight:400;
+    color:var(--ink-soft);
+    direction:ltr;
+    text-align:right;
+    margin-top:1px;
+  }
+  .shift-block{
+    margin-bottom:12px;
+  }
+  .shift-title{
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin:14px 0 4px;
+  }
+  .shift-title:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>הסעות שישי · דבירה</h1>
+    <p>שנת הלימודים תשפ"ז</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="byName">לפי משפחה</button>
+    <button class="tab-btn" data-tab="byDate">לפי תאריך</button>
+  </div>
+
+  <div id="byName" class="panel active">
+    <div class="field autocomplete-wrap">
+      <label for="nameInput">שם משפחה</label>
+      <input type="text" id="nameInput" placeholder="התחילו להקליד שם משפחה..." autocomplete="off">
+      <div id="nameSuggestions" class="suggestions"></div>
+    </div>
+    <div id="nameResults"></div>
+  </div>
+
+  <div id="byDate" class="panel">
+    <div class="field">
+      <label for="dateSelect">תאריך</label>
+      <select id="dateSelect"></select>
+    </div>
+    <div id="dateResults"></div>
+  </div>
+</div>
+
+<script id="schedule-data" type="application/json">
+{
+  "schedule": [
+    {
+      "date": "2026-09-04",
+      "shift": "בוקר",
+      "bus1": "ויסברג - איתי/איילת צי",
+      "bus2": "רבינס - רונן/מאיה",
+      "bus3": "זדה - רביב/מיכל",
+      "car": "דוידי - יגאל/הילה"
+    },
+    {
+      "date": "2026-09-04",
+      "shift": "צהריים",
+      "bus1": "קרואני - שגיא/דנה",
+      "bus2": "בן יוסף - יפתח/נטלי",
+      "bus3": "ז'נסקר פז - אדוארד/הילה",
+      "car": "גולני - מעין/אורית"
+    },
+    {
+      "date": "2026-09-18",
+      "shift": "בוקר",
+      "bus1": "פוגל יצחקי - שלומי/מיכל",
+      "bus2": "שני - ינאי/אביגל",
+      "bus3": "כהן - אמציה/רביד",
+      "car": "גולדפרב - שימי/אורטל"
+    },
+    {
+      "date": "2026-09-18",
+      "shift": "צהריים",
+      "bus1": "להב - ערן (דוד/יערה",
+      "bus2": "חדד - משה/רחל",
+      "bus3": "טיאר - צחי/אדוה גילה",
+      "car": "הרוש - ניר/רינת"
+    },
+    {
+      "date": "2026-10-09",
+      "shift": "בוקר",
+      "bus1": "פרץ - דניאל/נואי",
+      "bus2": "נאור - אחיקם/ליטל",
+      "bus3": "רביד - אורי/איה",
+      "car": "כהן - מתן/רותם"
+    },
+    {
+      "date": "2026-10-09",
+      "shift": "צהריים",
+      "bus1": "קלפון - אליאב/אורית",
+      "bus2": "בכר - אביעד/נופר",
+      "bus3": "ישנו - אורי/ליאור",
+      "car": "ברטוב גל - שי/אורלי דב"
+    },
+    {
+      "date": "2026-10-16",
+      "shift": "בוקר",
+      "bus1": "גליצנשטיין - רונן/הדס",
+      "bus2": "אטיאס - יקיר/גל",
+      "bus3": "שואף - טל/איילת",
+      "car": "גונן - לירון/אולגה"
+    },
+    {
+      "date": "2026-10-16",
+      "shift": "צהריים",
+      "bus1": "כרמל - כרמל-אבא/מיכל",
+      "bus2": "ירון - איתמר/יעל",
+      "bus3": "אפרתי - נעם/המיה",
+      "car": "פרילוצקי - רומן ישר/אינה"
+    },
+    {
+      "date": "2026-10-23",
+      "shift": "בוקר",
+      "bus1": "בקון - דקל/מור",
+      "bus2": "ליבוביץ - אלון/דקלה צבי",
+      "bus3": "אגאי - ערן/ליאת",
+      "car": "בלקין פרדו ב - מרסלו/מילנה"
+    },
+    {
+      "date": "2026-10-23",
+      "shift": "צהריים",
+      "bus1": "יעקובי רנן - יניב/הילה",
+      "bus2": "בשן - חנן/שרון",
+      "bus3": "קליינר - טל/מיכל שרית",
+      "car": "שואף - נדב/ציפי"
+    },
+    {
+      "date": "2026-10-30",
+      "shift": "בוקר",
+      "bus1": "סהר - יתיר/קרן שמש",
+      "bus2": "איאש - אביתר/מיכל",
+      "bus3": "אמיתי - ניצן/סיון",
+      "car": "בקון מזור - דגן/הגר"
+    },
+    {
+      "date": "2026-10-30",
+      "shift": "צהריים",
+      "bus1": "פונגסידה עלמא - סאווירט/שי",
+      "bus2": "שטוטמן - יניר/ליאורה ר",
+      "bus3": "חזן - גיא/נועה סול",
+      "car": "שגיא - יפתח מאי/טל"
+    },
+    {
+      "date": "2026-11-06",
+      "shift": "בוקר",
+      "bus1": "אליהו - הדר/לימור",
+      "bus2": "פארן - נוה/אפרת",
+      "bus3": "בס מתאו - אליעזר/שימרית עירית",
+      "car": "לוין - ליאור/ברית"
+    },
+    {
+      "date": "2026-11-06",
+      "shift": "צהריים",
+      "bus1": "גבע - ים/מיטל אליס",
+      "bus2": "פרידמן אהרון - עודד/מיכל",
+      "bus3": "גרבי - דרור ישר/הלה",
+      "car": "רובין - ראם/הילה"
+    },
+    {
+      "date": "2026-11-13",
+      "shift": "בוקר",
+      "bus1": "זר - נפתלי אליעזר/עדן",
+      "bus2": "הררי - אורי/חן מלי",
+      "bus3": "מרקו - עידו/טל",
+      "car": "טליאס גיא - תמיר/צליל"
+    },
+    {
+      "date": "2026-11-13",
+      "shift": "צהריים",
+      "bus1": "יונקמן - נעם/פלג",
+      "bus2": "כהן - איתיאל/טטיאנה",
+      "bus3": "ווינטראוב - אורן נחמן/קרן",
+      "car": "גוטמן - נמרוד/אפרת"
+    },
+    {
+      "date": "2026-11-20",
+      "shift": "בוקר",
+      "bus1": "בנימין יובל - יונתן לואיס/הדס",
+      "bus2": "שדמי חיון - ליאור/רוני",
+      "bus3": "גור - ינון/מיטל",
+      "car": "יצחקי - אהוד/מורן"
+    },
+    {
+      "date": "2026-11-20",
+      "shift": "צהריים",
+      "bus1": "פרידמן - ברק/שניר",
+      "bus2": "שראייר - יואב/שירן טובה",
+      "bus3": "פרי - שלומי/איסי לי",
+      "car": "מולכו - נועם/אנטל"
+    },
+    {
+      "date": "2026-11-27",
+      "shift": "בוקר",
+      "bus1": "כהן - עפר/יעל",
+      "bus2": "אל אל - שרון/סיון",
+      "bus3": "רפפורט - אביב/ענת",
+      "car": "טל - דרור/אלינור"
+    },
+    {
+      "date": "2026-11-27",
+      "shift": "צהריים",
+      "bus1": "אוזרסקי קורן - ודים/ירדן",
+      "bus2": "וייס - שחר/מיטל",
+      "bus3": "דוידסון - רונן אנד/עמית",
+      "car": "כהן - יהודה או/אסתי"
+    },
+    {
+      "date": "2026-12-04",
+      "shift": "בוקר",
+      "bus1": "חורין - גלעד/ספיר",
+      "bus2": "בן ארוש - חגי חיים/שני",
+      "bus3": "מקלר - רן/עדי",
+      "car": "סקג'ו - איל/שירן"
+    },
+    {
+      "date": "2026-12-04",
+      "shift": "צהריים",
+      "bus1": "לנקרי - עמר/לאה",
+      "bus2": "בירקנפלד - גל/לילי",
+      "bus3": "קרימרמן איתן - מטיאס גב/אשרה",
+      "car": "אפללו יובל - יגאל/אפרת"
+    },
+    {
+      "date": "2026-12-18",
+      "shift": "בוקר",
+      "bus1": "בוסיבא - ליאת",
+      "bus2": "פריד - אמיר יעק/טלי",
+      "bus3": "אלימלך - דור/רות",
+      "car": "הדס - אלדד/אנה"
+    },
+    {
+      "date": "2026-12-18",
+      "shift": "צהריים",
+      "bus1": "בנאי - אהוד/הדר",
+      "bus2": "שליי - אילן/טהר",
+      "bus3": "נחליאלי - גיל-עד י/עדי",
+      "car": "אשכנזי אדלר - אוריה/מורן"
+    },
+    {
+      "date": "2026-12-25",
+      "shift": "בוקר",
+      "bus1": "מאיר - נתן/חן",
+      "bus2": "קלוגמן - ראובן/חנית",
+      "bus3": "תורג'מן - עופר/הדס",
+      "car": "רבינס - רונן/מאיה"
+    },
+    {
+      "date": "2026-12-25",
+      "shift": "צהריים",
+      "bus1": "קרואני - שגיא/דנה",
+      "bus2": "בן יוסף - יפתח/נטלי",
+      "bus3": "זדה - רביב/מיכל",
+      "car": "דוידי - יגאל/הילה"
+    },
+    {
+      "date": "2027-01-01",
+      "shift": "בוקר",
+      "bus1": "ויסברג - איתי/איילת צי",
+      "bus2": "חדד - משה/רחל",
+      "bus3": "גולני - מעין/אורית",
+      "car": "ז'נסקר פז - אדוארד/הילה"
+    },
+    {
+      "date": "2027-01-01",
+      "shift": "צהריים",
+      "bus1": "גולדפרב - שימי/אורטל",
+      "bus2": "שני - ינאי/אביגל",
+      "bus3": "להב - ערן (דוד/יערה",
+      "car": "כהן - אמציה/רביד"
+    },
+    {
+      "date": "2027-01-08",
+      "shift": "בוקר",
+      "bus1": "פוגל יצחקי - שלומי/מיכל",
+      "bus2": "בכר - אביעד/נופר",
+      "bus3": "הרוש - ניר/רינת",
+      "car": "טיאר - צחי/אדוה גילה"
+    },
+    {
+      "date": "2027-01-08",
+      "shift": "צהריים",
+      "bus1": "פרץ - דניאל/נואי",
+      "bus2": "קלפון - אליאב/אורית",
+      "bus3": "רביד - אורי/איה",
+      "car": "ברטוב גל - שי/אורלי דב"
+    },
+    {
+      "date": "2027-01-15",
+      "shift": "בוקר",
+      "bus1": "כהן - מתן/רותם",
+      "bus2": "נאור - אחיקם/ליטל",
+      "bus3": "ישנו - אורי/ליאור",
+      "car": "שואף - טל/איילת"
+    },
+    {
+      "date": "2027-01-15",
+      "shift": "צהריים",
+      "bus1": "אטיאס - יקיר/גל",
+      "bus2": "פרילוצקי - רומן ישר/אינה",
+      "bus3": "גונן - לירון/אולגה",
+      "car": "אפרתי - נעם/המיה"
+    },
+    {
+      "date": "2027-01-22",
+      "shift": "בוקר",
+      "bus1": "גליצנשטיין - רונן/הדס",
+      "bus2": "ירון - איתמר/יעל",
+      "bus3": "שואף - נדב/ציפי",
+      "car": "כרמל - כרמל-אבא/מיכל"
+    },
+    {
+      "date": "2027-01-22",
+      "shift": "צהריים",
+      "bus1": "יעקובי רנן - יניב/הילה",
+      "bus2": "ליבוביץ - אלון/דקלה צבי",
+      "bus3": "קליינר - טל/מיכל שרית",
+      "car": "בשן - חנן/שרון"
+    },
+    {
+      "date": "2027-01-29",
+      "shift": "בוקר",
+      "bus1": "בלקין פרדו ב - מרסלו/מילנה",
+      "bus2": "בקון - דקל/מור",
+      "bus3": "אגאי - ערן/ליאת",
+      "car": "איאש - אביתר/מיכל"
+    },
+    {
+      "date": "2027-01-29",
+      "shift": "צהריים",
+      "bus1": "שטוטמן - יניר/ליאורה ר",
+      "bus2": "חזן - גיא/נועה סול",
+      "bus3": "אמיתי - ניצן/סיון",
+      "car": "סהר - יתיר/קרן שמש"
+    },
+    {
+      "date": "2027-02-05",
+      "shift": "בוקר",
+      "bus1": "פונגסידה עלמא - סאווירט/שי",
+      "bus2": "בקון מזור - דגן/הגר",
+      "bus3": "שגיא - יפתח מאי/טל",
+      "car": "פרידמן אהרון - עודד/מיכל"
+    },
+    {
+      "date": "2027-02-05",
+      "shift": "צהריים",
+      "bus1": "לוין - ליאור/ברית",
+      "bus2": "פארן - נוה/אפרת",
+      "bus3": "בס מתאו - אליעזר/שימרית עירית",
+      "car": "גבע - ים/מיטל אליס"
+    },
+    {
+      "date": "2027-02-12",
+      "shift": "בוקר",
+      "bus1": "אליהו - הדר/לימור",
+      "bus2": "כהן - איתיאל/טטיאנה",
+      "bus3": "גרבי - דרור ישר/הלה",
+      "car": "רובין - ראם/הילה"
+    },
+    {
+      "date": "2027-02-12",
+      "shift": "צהריים",
+      "bus1": "טליאס גיא - תמיר/צליל",
+      "bus2": "הררי - אורי/חן מלי",
+      "bus3": "זר - נפתלי אליעזר/עדן",
+      "car": "מרקו - עידו/טל"
+    },
+    {
+      "date": "2027-02-19",
+      "shift": "בוקר",
+      "bus1": "יונקמן - נעם/פלג",
+      "bus2": "שדמי חיון - ליאור/רוני",
+      "bus3": "ווינטראוב - אורן נחמן/קרן",
+      "car": "גוטמן - נמרוד/אפרת"
+    },
+    {
+      "date": "2027-02-19",
+      "shift": "צהריים",
+      "bus1": "פרידמן - ברק/שניר",
+      "bus2": "מולכו - נועם/אנטל",
+      "bus3": "פרי - שלומי/איסי לי",
+      "car": "גור - ינון/מיטל"
+    },
+    {
+      "date": "2027-02-26",
+      "shift": "בוקר",
+      "bus1": "שראייר - יואב/שירן טובה",
+      "bus2": "כהן - יהודה או/אסתי",
+      "bus3": "יצחקי - אהוד/מורן",
+      "car": "בנימין יובל - יונתן לואיס/הדס"
+    },
+    {
+      "date": "2027-02-26",
+      "shift": "צהריים",
+      "bus1": "כהן - עפר/יעל",
+      "bus2": "אל אל - שרון/סיון",
+      "bus3": "רפפורט - אביב/ענת",
+      "car": "טל - דרור/אלינור"
+    },
+    {
+      "date": "2027-03-05",
+      "shift": "בוקר",
+      "bus1": "דוידסון - רונן אנד/עמית",
+      "bus2": "וייס - שחר/מיטל",
+      "bus3": "קרימרמן איתן - מטיאס גב/אשרה",
+      "car": "אוזרסקי קורן - ודים/ירדן"
+    },
+    {
+      "date": "2027-03-05",
+      "shift": "צהריים",
+      "bus1": "סקג'ו - איל/שירן",
+      "bus2": "בן ארוש - חגי חיים/שני",
+      "bus3": "מקלר - רן/עדי",
+      "car": "חורין - גלעד/ספיר"
+    },
+    {
+      "date": "2027-03-12",
+      "shift": "בוקר",
+      "bus1": "לנקרי - עמר/לאה",
+      "bus2": "בירקנפלד - גל/לילי",
+      "bus3": "נחליאלי - גיל-עד י/עדי",
+      "car": "אפללו יובל - יגאל/אפרת"
+    },
+    {
+      "date": "2027-03-12",
+      "shift": "צהריים",
+      "bus1": "הדס - אלדד/אנה",
+      "bus2": "פריד - אמיר יעק/טלי",
+      "bus3": "אלימלך - דור/רות",
+      "car": "בוסיבא - ליאת"
+    },
+    {
+      "date": "2027-03-19",
+      "shift": "בוקר",
+      "bus1": "בנאי - אהוד/הדר",
+      "bus2": "אשכנזי אדלר - אוריה/מורן",
+      "bus3": "תורג'מן - עופר/הדס",
+      "car": "שליי - אילן/טהר"
+    },
+    {
+      "date": "2027-03-19",
+      "shift": "צהריים",
+      "bus1": "מאיר - נתן/חן",
+      "bus2": "קלוגמן - ראובן/חנית",
+      "bus3": "זדה - רביב/מיכל",
+      "car": "רבינס - רונן/מאיה"
+    },
+    {
+      "date": "2027-03-26",
+      "shift": "בוקר",
+      "bus1": "בן יוסף - יפתח/נטלי",
+      "bus2": "דוידי - יגאל/הילה",
+      "bus3": "קרואני - שגיא/דנה",
+      "car": "גולני - מעין/אורית"
+    },
+    {
+      "date": "2027-03-26",
+      "shift": "צהריים",
+      "bus1": "חדד - משה/רחל",
+      "bus2": "שני - ינאי/אביגל",
+      "bus3": "גולדפרב - שימי/אורטל",
+      "car": "ז'נסקר פז - אדוארד/הילה"
+    },
+    {
+      "date": "2027-04-02",
+      "shift": "בוקר",
+      "bus1": "להב - ערן (דוד/יערה",
+      "bus2": "בכר - אביעד/נופר",
+      "bus3": "כהן - אמציה/רביד",
+      "car": "ויסברג - איתי/איילת צי"
+    },
+    {
+      "date": "2027-04-02",
+      "shift": "צהריים",
+      "bus1": "פרץ - דניאל/נואי",
+      "bus2": "קלפון - אליאב/אורית",
+      "bus3": "רביד - אורי/איה",
+      "car": "פוגל יצחקי - שלומי/מיכל"
+    },
+    {
+      "date": "2027-04-09",
+      "shift": "בוקר",
+      "bus1": "אטיאס - יקיר/גל",
+      "bus2": "פרילוצקי - רומן ישר/אינה",
+      "bus3": "הרוש - ניר/רינת",
+      "car": "טיאר - צחי/אדוה גילה"
+    },
+    {
+      "date": "2027-04-09",
+      "shift": "צהריים",
+      "bus1": "כהן - מתן/רותם",
+      "bus2": "נאור - אחיקם/ליטל",
+      "bus3": "ברטוב גל - שי/אורלי דב",
+      "car": "ישנו - אורי/ליאור"
+    },
+    {
+      "date": "2027-04-30",
+      "shift": "בוקר",
+      "bus1": "יעקובי רנן - יניב/הילה",
+      "bus2": "בשן - חנן/שרון",
+      "bus3": "גונן - לירון/אולגה",
+      "car": "אפרתי - נעם/המיה"
+    },
+    {
+      "date": "2027-04-30",
+      "shift": "צהריים",
+      "bus1": "גליצנשטיין - רונן/הדס",
+      "bus2": "ליבוביץ - אלון/דקלה צבי",
+      "bus3": "שואף - טל/איילת",
+      "car": "שואף - נדב/ציפי"
+    },
+    {
+      "date": "2027-05-07",
+      "shift": "בוקר",
+      "bus1": "כרמל - כרמל-אבא/מיכל",
+      "bus2": "קליינר - טל/מיכל שרית",
+      "bus3": "אמיתי - ניצן/סיון",
+      "car": "ירון - איתמר/יעל"
+    },
+    {
+      "date": "2027-05-07",
+      "shift": "צהריים",
+      "bus1": "בקון - דקל/מור",
+      "bus2": "חזן - גיא/נועה סול",
+      "bus3": "סהר - יתיר/קרן שמש",
+      "car": "שטוטמן - יניר/ליאורה ר"
+    },
+    {
+      "date": "2027-05-14",
+      "shift": "בוקר",
+      "bus1": "בלקין פרדו ב - מרסלו/מילנה",
+      "bus2": "איאש - אביתר/מיכל",
+      "bus3": "אגאי - ערן/ליאת",
+      "car": "שגיא - יפתח מאי/טל"
+    },
+    {
+      "date": "2027-05-14",
+      "shift": "צהריים",
+      "bus1": "פונגסידה עלמא - סאווירט/שי",
+      "bus2": "לוין - ליאור/ברית",
+      "bus3": "פרידמן אהרון - עודד/מיכל",
+      "car": "בס מתאו - אליעזר/שימרית עירית"
+    },
+    {
+      "date": "2027-05-21",
+      "shift": "בוקר",
+      "bus1": "גבע - ים/מיטל אליס",
+      "bus2": "פארן - נוה/אפרת",
+      "bus3": "מרקו - עידו/טל",
+      "car": "בקון מזור - דגן/הגר"
+    },
+    {
+      "date": "2027-05-21",
+      "shift": "צהריים",
+      "bus1": "זר - נפתלי אליעזר/עדן",
+      "bus2": "הררי - אורי/חן מלי",
+      "bus3": "גרבי - דרור ישר/הלה",
+      "car": "כהן - איתיאל/טטיאנה"
+    },
+    {
+      "date": "2027-05-28",
+      "shift": "בוקר",
+      "bus1": "רובין - ראם/הילה",
+      "bus2": "אליהו - הדר/לימור",
+      "bus3": "גור - ינון/מיטל",
+      "car": "טליאס גיא - תמיר/צליל"
+    },
+    {
+      "date": "2027-05-28",
+      "shift": "צהריים",
+      "bus1": "יונקמן - נעם/פלג",
+      "bus2": "שדמי חיון - ליאור/רוני",
+      "bus3": "פרי - שלומי/איסי לי",
+      "car": "ווינטראוב - אורן נחמן/קרן"
+    },
+    {
+      "date": "2027-06-04",
+      "shift": "בוקר",
+      "bus1": "גוטמן - נמרוד/אפרת",
+      "bus2": "מולכו - נועם/אנטל",
+      "bus3": "שראייר - יואב/שירן טובה",
+      "car": "פרידמן - ברק/שניר"
+    },
+    {
+      "date": "2027-06-04",
+      "shift": "צהריים",
+      "bus1": "כהן - עפר/יעל",
+      "bus2": "אל אל - שרון/סיון",
+      "bus3": "רפפורט - אביב/ענת",
+      "car": "טל - דרור/אלינור"
+    },
+    {
+      "date": "2027-06-18",
+      "shift": "בוקר",
+      "bus1": "בנימין יובל - יונתן לואיס/הדס",
+      "bus2": "כהן - יהודה או/אסתי",
+      "bus3": "יצחקי - אהוד/מורן",
+      "car": "סקג'ו - איל/שירן"
+    },
+    {
+      "date": "2027-06-18",
+      "shift": "צהריים",
+      "bus1": "אוזרסקי קורן - ודים/ירדן",
+      "bus2": "בן ארוש - חגי חיים/שני",
+      "bus3": "דוידסון - רונן אנד/עמית",
+      "car": "חורין - גלעד/ספיר"
+    },
+    {
+      "date": "2027-06-25",
+      "shift": "בוקר",
+      "bus1": "לנקרי - עמר/לאה",
+      "bus2": "וייס - שחר/מיטל",
+      "bus3": "בוסיבא - ליאת",
+      "car": "פריד - אמיר יעק/טלי"
+    },
+    {
+      "date": "2027-06-25",
+      "shift": "צהריים",
+      "bus1": "הדס - אלדד/אנה",
+      "bus2": "בירקנפלד - גל/לילי",
+      "bus3": "אפללו יובל - יגאל/אפרת",
+      "car": "בנאי - אהוד/הדר"
+    }
+  ],
+  "families": [
+    "אגאי - ערן/ליאת",
+    "אוזרסקי קורן - ודים/ירדן",
+    "אטיאס - יקיר/גל",
+    "איאש - אביתר/מיכל",
+    "אל אל - שרון/סיון",
+    "אליהו - הדר/לימור",
+    "אלימלך - דור/רות",
+    "אמיתי - ניצן/סיון",
+    "אפללו יובל - יגאל/אפרת",
+    "אפרתי - נעם/המיה",
+    "אשכנזי אדלר - אוריה/מורן",
+    "בוסיבא - ליאת",
+    "בירקנפלד - גל/לילי",
+    "בכר - אביעד/נופר",
+    "בלקין פרדו ב - מרסלו/מילנה",
+    "בן ארוש - חגי חיים/שני",
+    "בן יוסף - יפתח/נטלי",
+    "בנאי - אהוד/הדר",
+    "בנימין יובל - יונתן לואיס/הדס",
+    "בס מתאו - אליעזר/שימרית עירית",
+    "בקון - דקל/מור",
+    "בקון מזור - דגן/הגר",
+    "ברטוב גל - שי/אורלי דב",
+    "בשן - חנן/שרון",
+    "גבע - ים/מיטל אליס",
+    "גוטמן - נמרוד/אפרת",
+    "גולדפרב - שימי/אורטל",
+    "גולני - מעין/אורית",
+    "גונן - לירון/אולגה",
+    "גור - ינון/מיטל",
+    "גליצנשטיין - רונן/הדס",
+    "גרבי - דרור ישר/הלה",
+    "דוידי - יגאל/הילה",
+    "דוידסון - רונן אנד/עמית",
+    "הדס - אלדד/אנה",
+    "הרוש - ניר/רינת",
+    "הררי - אורי/חן מלי",
+    "ווינטראוב - אורן נחמן/קרן",
+    "וייס - שחר/מיטל",
+    "ויסברג - איתי/איילת צי",
+    "ז'נסקר פז - אדוארד/הילה",
+    "זדה - רביב/מיכל",
+    "זר - נפתלי אליעזר/עדן",
+    "חדד - משה/רחל",
+    "חורין - גלעד/ספיר",
+    "חזן - גיא/נועה סול",
+    "טיאר - צחי/אדוה גילה",
+    "טל - דרור/אלינור",
+    "טליאס גיא - תמיר/צליל",
+    "יונקמן - נעם/פלג",
+    "יעקובי רנן - יניב/הילה",
+    "יצחקי - אהוד/מורן",
+    "ירון - איתמר/יעל",
+    "ישנו - אורי/ליאור",
+    "כהן - איתיאל/טטיאנה",
+    "כהן - אמציה/רביד",
+    "כהן - יהודה או/אסתי",
+    "כהן - מתן/רותם",
+    "כהן - עפר/יעל",
+    "כרמל - כרמל-אבא/מיכל",
+    "להב - ערן (דוד/יערה",
+    "לוין - ליאור/ברית",
+    "ליבוביץ - אלון/דקלה צבי",
+    "לנקרי - עמר/לאה",
+    "מאיר - נתן/חן",
+    "מולכו - נועם/אנטל",
+    "מקלר - רן/עדי",
+    "מרקו - עידו/טל",
+    "נאור - אחיקם/ליטל",
+    "נחליאלי - גיל-עד י/עדי",
+    "סהר - יתיר/קרן שמש",
+    "סקג'ו - איל/שירן",
+    "פארן - נוה/אפרת",
+    "פוגל יצחקי - שלומי/מיכל",
+    "פונגסידה עלמא - סאווירט/שי",
+    "פרי - שלומי/איסי לי",
+    "פריד - אמיר יעק/טלי",
+    "פרידמן - ברק/שניר",
+    "פרידמן אהרון - עודד/מיכל",
+    "פרילוצקי - רומן ישר/אינה",
+    "פרץ - דניאל/נואי",
+    "קלוגמן - ראובן/חנית",
+    "קליינר - טל/מיכל שרית",
+    "קלפון - אליאב/אורית",
+    "קרואני - שגיא/דנה",
+    "קרימרמן איתן - מטיאס גב/אשרה",
+    "רביד - אורי/איה",
+    "רבינס - רונן/מאיה",
+    "רובין - ראם/הילה",
+    "רפפורט - אביב/ענת",
+    "שגיא - יפתח מאי/טל",
+    "שדמי חיון - ליאור/רוני",
+    "שואף - טל/איילת",
+    "שואף - נדב/ציפי",
+    "שטוטמן - יניר/ליאורה ר",
+    "שליי - אילן/טהר",
+    "שני - ינאי/אביגל",
+    "שראייר - יואב/שירן טובה",
+    "תורג'מן - עופר/הדס"
+  ],
+  "phones": {
+    "אגאי - ערן/ליאת": "054-7103394 / 054-5541050",
+    "אוזרסקי קורן - ודים/ירדן": "054-7916961",
+    "אטיאס - יקיר/גל": "054-7000690",
+    "איאש - אביתר/מיכל": "052-2624333 / 054-8060750",
+    "אל אל - שרון/סיון": "054-6672322 / 054-5661581",
+    "אליהו - הדר/לימור": "050-6363636 / 052-8340912",
+    "אלימלך - דור/רות": "050-2599146 / 050-7599146",
+    "אמיתי - ניצן/סיון": "052-8105335 / 054-4666337",
+    "אפללו יובל - יגאל/אפרת": "050-5679383 / 054-4874988",
+    "אפרתי - נעם/המיה": "050-6998907 / 050-9162283",
+    "אשכנזי אדלר - אוריה/מורן": "054-2545457 / 054-6689065",
+    "בוסיבא - ליאת": "054-3010207",
+    "בירקנפלד - גל/לילי": "052-4708771 / 052-4708771",
+    "בכר - אביעד/נופר": "050-6312674 / 052-8105368",
+    "בלקין פרדו ב - מרסלו/מילנה": "050-8843020 / 058-6669293",
+    "בן ארוש - חגי חיים/שני": "050-7989101 / 050-7888218",
+    "בן יוסף - יפתח/נטלי": "054-6616410 / 052-5361939",
+    "בנאי - אהוד/הדר": "054-260-8250",
+    "בנימין יובל - יונתן לואיס/הדס": "050-7306010 / 050-7306010",
+    "בס מתאו - אליעזר/שימרית עירית": "050-6532203 / 052-2407959",
+    "בקון - דקל/מור": "052-9452163 / 052-9452163 ,052-3640321",
+    "בקון מזור - דגן/הגר": "054-7636664 / 054-7636665",
+    "ברטוב גל - שי/אורלי דב": "054-4434241 / 054-9009700",
+    "בשן - חנן/שרון": "050-8444188",
+    "גבע - ים/מיטל אליס": "054-5665800 / 054-5715432",
+    "גוטמן - נמרוד/אפרת": "050-2034347 / 050-4417715",
+    "גולדפרב - שימי/אורטל": "054-5869203",
+    "גולני - מעין/אורית": "052-2469554 / 052-6333431",
+    "גונן - לירון/אולגה": "052-9240396 / 054-7299545",
+    "גור - ינון/מיטל": "054-5670408 / 054-5670409",
+    "גליצנשטיין - רונן/הדס": "054-5608622 / 052-4662263",
+    "גרבי - דרור ישר/הלה": "050-6942422 / 052-2825098",
+    "דוידי - יגאל/הילה": "054-2337696 / 054-8882126",
+    "דוידסון - רונן אנד/עמית": "050-2310013 / 054-5670566",
+    "הדס - אלדד/אנה": "054-5686920 / 054-6331706",
+    "הרוש - ניר/רינת": "050-7570203 / 052-2897962",
+    "הררי - אורי/חן מלי": "052-8666243 / 058-4646468",
+    "ווינטראוב - אורן נחמן/קרן": "054-4764752 / 054-9805000",
+    "וייס - שחר/מיטל": "054-7903022 / 050-7596411",
+    "ויסברג - איתי/איילת צי": "054-2228232 / 054-2228232",
+    "ז'נסקר פז - אדוארד/הילה": "054-7677354 / 052-3592550",
+    "זדה - רביב/מיכל": "052-3156650 / 050-9110506",
+    "זר - נפתלי אליעזר/עדן": "054-5851580 / 052-8105484",
+    "חדד - משה/רחל": "054-6660199 / 054-9021318",
+    "חורין - גלעד/ספיר": "054-480-7163 / 054-490-7417",
+    "חזן - גיא/נועה סול": "050-2245147 / 050-2245147",
+    "טיאר - צחי/אדוה גילה": "052-9257638 / 054-8158527",
+    "טל - דרור/אלינור": "050-7959924 / 050-5919882",
+    "טליאס גיא - תמיר/צליל": "052-8105276 / 050-6598334",
+    "יונקמן - נעם/פלג": "050-5236298 / 052-8105229",
+    "יעקובי רנן - יניב/הילה": "052-5508580",
+    "יצחקי - אהוד/מורן": "052-9209635 / 052-8976407",
+    "ירון - איתמר/יעל": "054-7356828 / 052-3441176",
+    "ישנו - אורי/ליאור": "058-7105485 / 050-8776550",
+    "כהן - איתיאל/טטיאנה": "050-6766677 / 050-4523490",
+    "כהן - אמציה/רביד": "050-9288800 / 054-6494668",
+    "כהן - יהודה או/אסתי": "054-4882230 / 052-7798329",
+    "כהן - מתן/רותם": "050-5345541",
+    "כהן - עפר/יעל": "052-7482843 / 054-2459124",
+    "כרמל - כרמל-אבא/מיכל": "050-4899495",
+    "להב - ערן (דוד/יערה": "054-2561461 / 058-6862244",
+    "לוין - ליאור/ברית": "052-8105283 / 054-5292052",
+    "ליבוביץ - אלון/דקלה צבי": "052-6126550 / 052-6126550",
+    "לנקרי - עמר/לאה": "052-5799879 / 054-9455760",
+    "מאיר - נתן/חן": "054-4612544 / 054-6677241",
+    "מולכו - נועם/אנטל": "054-7887333 / 054-2065660",
+    "מקלר - רן/עדי": "050-9441076 / 052-6055287",
+    "מרקו - עידו/טל": "054-6532009 / 058-6252548",
+    "נאור - אחיקם/ליטל": "054-331-7288 / 054-4563069",
+    "נחליאלי - גיל-עד י/עדי": "054-7784438 / 052-9450838",
+    "סהר - יתיר/קרן שמש": "050-6239124 / 054-7714010",
+    "סקג'ו - איל/שירן": "050-6238981 / 050-6248934",
+    "פארן - נוה/אפרת": "052-2372567 / 050-4443636",
+    "פוגל יצחקי - שלומי/מיכל": "050-789-0007",
+    "פונגסידה עלמא - סאווירט/שי": "",
+    "פרי - שלומי/איסי לי": "054-641-6612 / 054-7589842",
+    "פריד - אמיר יעק/טלי": "050-7929578 / 050-7401757",
+    "פרידמן - ברק/שניר": "054-3452770 / 054-9009033",
+    "פרידמן אהרון - עודד/מיכל": "050-2504338 / 050-2504338",
+    "פרילוצקי - רומן ישר/אינה": "054-5937340 / 054-5224869",
+    "פרץ - דניאל/נואי": "053-4205629",
+    "קלוגמן - ראובן/חנית": "054-4269601 / 054-7986336",
+    "קליינר - טל/מיכל שרית": "054-6755116 / 054-4768055",
+    "קלפון - אליאב/אורית": "052-8105211",
+    "קרואני - שגיא/דנה": "052-8105494 / 054-6317282",
+    "קרימרמן איתן - מטיאס גב/אשרה": "054-5376754 / 054-5262653",
+    "רביד - אורי/איה": "052-6344423 / 052-8105498",
+    "רבינס - רונן/מאיה": "054-5310243 / 052-5507925",
+    "רובין - ראם/הילה": "050-7681666 / 052-8280929",
+    "רפפורט - אביב/ענת": "054-6606136 / 054-6606136",
+    "שגיא - יפתח מאי/טל": "054-9344704 / 052-3846013",
+    "שדמי חיון - ליאור/רוני": "052-4287874 / 050-9318056",
+    "שואף - טל/איילת": "058-4444531 / 054-2401524",
+    "שואף - נדב/ציפי": "052-8105398 / 054-6452402",
+    "שטוטמן - יניר/ליאורה ר": "052-5409995 / 052-2249900",
+    "שליי - אילן/טהר": "054-6979901 / 054-5670378",
+    "שני - ינאי/אביגל": "052-8105315 / 052-6015363",
+    "שראייר - יואב/שירן טובה": "054-4978052 / 052-6446282",
+    "תורג'מן - עופר/הדס": "050-8366662 / 050-5281728"
+  }
+}
+</script>
+<script>
+const ROLES = [
+  {key:'bus1', label:'הסעה 1 (א-ב)', color:'var(--bus1)', bg:'var(--bus1-bg)'},
+  {key:'bus2', label:'הסעה 2 (ג-ו)', color:'var(--bus2)', bg:'var(--bus2-bg)'},
+  {key:'bus3', label:'הסעה 3 (ד-ה)', color:'var(--bus3)', bg:'var(--bus3-bg)'},
+  {key:'car',  label:'רכב מסיע',     color:'var(--car)',  bg:'var(--car-bg)'},
+];
+
+let DATA = {schedule:[], families:[], phones:{}};
+
+function formatDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function roleChip(role){
+  return `<span class="role-name"><span class="dot" style="background:${role.color}"></span>${role.label}</span>`;
+}
+
+function renderDateBlock(dateRows){
+  let html = '';
+  dateRows.forEach(row=>{
+    html += `<div class="shift-block"><div class="shift-title">${row.shift}</div>`;
+    ROLES.forEach(role=>{
+      const name = row[role.key] || '—';
+      const phone = DATA.phones[name];
+      const phoneHtml = phone ? `<span class="role-phone">${phone}</span>` : '';
+      html += `<div class="role-line">${roleChip(role)}<span class="role-val">${name}${phoneHtml}</span></div>`;
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+function initNameSearch(){
+  const input = document.getElementById('nameInput');
+  const suggestionsBox = document.getElementById('nameSuggestions');
+  const results = document.getElementById('nameResults');
+
+  let visibleMatches = [];
+  let highlightedIdx = -1;
+  let selectedName = null;
+
+  function closeSuggestions(){
+    suggestionsBox.classList.remove('open');
+    suggestionsBox.innerHTML = '';
+    visibleMatches = [];
+    highlightedIdx = -1;
+  }
+
+  function renderSuggestions(matches){
+    visibleMatches = matches;
+    highlightedIdx = -1;
+    if(matches.length === 0){
+      suggestionsBox.innerHTML = '<div class="suggestions-empty">לא נמצאה משפחה כזו</div>';
+      suggestionsBox.classList.add('open');
+      return;
+    }
+    suggestionsBox.innerHTML = matches.map((name,i)=>
+      `<div class="suggestion-item" data-idx="${i}">${name}</div>`
+    ).join('');
+    suggestionsBox.classList.add('open');
+  }
+
+  function updateHighlight(){
+    [...suggestionsBox.querySelectorAll('.suggestion-item')].forEach((el,i)=>{
+      el.classList.toggle('highlighted', i===highlightedIdx);
+    });
+  }
+
+  function showFamilyResults(name){
+    selectedName = name;
+    input.value = name;
+    closeSuggestions();
+
+    const matches = DATA.schedule.filter(row =>
+      ROLES.some(role => row[role.key] === name)
+    ).sort((a,b)=> a.date.localeCompare(b.date) || a.shift.localeCompare(b.shift));
+
+    results.innerHTML = '';
+    if(matches.length === 0){
+      results.innerHTML = `<div class="empty">לא נמצאו שיבוצים עבור "${name}"</div>`;
+      return;
+    }
+
+    matches.forEach(row=>{
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      let inner = `<div class="date-row">${formatDate(row.date)}</div><div class="shift-row">${row.shift}</div>`;
+      ROLES.forEach(role=>{
+        if(row[role.key] === name){
+          inner += `<div class="chip" style="background:${role.bg};color:${role.color}"><span class="dot" style="background:${role.color}"></span>${role.label}</div>`;
+        }
+      });
+      card.innerHTML = inner;
+      results.appendChild(card);
+    });
+  }
+
+  input.addEventListener('input', ()=>{
+    selectedName = null;
+    results.innerHTML = '';
+    const q = input.value.trim();
+    if(!q){ closeSuggestions(); return; }
+    const matches = DATA.families.filter(name => name.includes(q));
+    renderSuggestions(matches);
+  });
+
+  input.addEventListener('keydown', (e)=>{
+    if(!suggestionsBox.classList.contains('open')) return;
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      if(visibleMatches.length){
+        highlightedIdx = (highlightedIdx + 1) % visibleMatches.length;
+        updateHighlight();
+      }
+    }else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      if(visibleMatches.length){
+        highlightedIdx = (highlightedIdx - 1 + visibleMatches.length) % visibleMatches.length;
+        updateHighlight();
+      }
+    }else if(e.key === 'Enter'){
+      e.preventDefault();
+      if(highlightedIdx >= 0 && visibleMatches[highlightedIdx]){
+        showFamilyResults(visibleMatches[highlightedIdx]);
+      }else if(visibleMatches.length === 1){
+        showFamilyResults(visibleMatches[0]);
+      }
+    }else if(e.key === 'Escape'){
+      closeSuggestions();
+    }
+  });
+
+  // mousedown (not click) so it fires before the input's blur event closes the list
+  suggestionsBox.addEventListener('mousedown', (e)=>{
+    const item = e.target.closest('.suggestion-item');
+    if(!item || item.dataset.idx === undefined) return;
+    const name = visibleMatches[Number(item.dataset.idx)];
+    if(name) showFamilyResults(name);
+  });
+
+  input.addEventListener('blur', ()=>{
+    setTimeout(closeSuggestions, 150);
+  });
+}
+
+
+function initDateSearch(){
+  const select = document.getElementById('dateSelect');
+  const results = document.getElementById('dateResults');
+
+  const dates = [...new Set(DATA.schedule.map(r=>r.date))].sort();
+  const todayISO = new Date().toISOString().slice(0,10);
+  let defaultDate = dates.find(d => d >= todayISO) || dates[dates.length-1];
+
+  dates.forEach(d=>{
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = 'יום שישי, ' + formatDate(d);
+    if(d === defaultDate) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  function show(){
+    const d = select.value;
+    const rows = DATA.schedule.filter(r=>r.date===d).sort((a,b)=>a.shift.localeCompare(b.shift));
+    results.innerHTML = renderDateBlock(rows);
+  }
+
+  select.addEventListener('change', show);
+  show();
+}
+
+try{
+  DATA = JSON.parse(document.getElementById('schedule-data').textContent);
+  initTabs();
+  initNameSearch();
+  initDateSearch();
+}catch(e){
+  document.querySelector('.wrap').innerHTML =
+    '<div class="empty">שגיאה בטעינת נתוני הלוח.</div>';
+}
+</script>
+</body>
+</html>
