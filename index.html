@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>הסעות שישי · דבירה תשפ"ז</title>
+<title>הסעות שישי · דביר תשפ"ז</title>
 <style>
   :root{
     --bg:#FAFAF8;
@@ -19,6 +19,8 @@
     --bus3-bg:#E5F6EE;
     --car:#6B5CA5;
     --car-bg:#EFEBF7;
+    --morning:#D9770B;
+    --afternoon:#A63D7A;
   }
   *{box-sizing:border-box;}
   body{
@@ -149,14 +151,53 @@
     padding:14px 16px;
     margin-bottom:10px;
   }
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:2px;
+  }
   .result-card .date-row{
     font-size:14px;
     font-weight:700;
-    margin-bottom:2px;
+  }
+  .cal-btn{
+    flex:none;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:7px 14px;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .cal-btn svg{
+    width:16px;
+    height:16px;
+    flex:none;
+  }
+  .cal-btn:hover{
+    background:var(--bus1-bg);
+    color:var(--bus1);
+    border-color:var(--bus1);
   }
   .result-card .shift-row{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .result-card .shift-row.shift-morning{ color:var(--morning); }
+  .result-card .shift-row.shift-afternoon{ color:var(--afternoon); }
+  .name-phone{
     font-size:13px;
     color:var(--ink-soft);
+    direction:ltr;
+    text-align:right;
     margin-bottom:10px;
   }
   .chip{
@@ -178,13 +219,19 @@
     font-size:14px;
   }
   .role-line:first-of-type{border-top:none;}
+  .role-line-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:3px;
+  }
   .role-name{
     font-size:13px;
     font-weight:600;
     display:flex;
     align-items:center;
     gap:6px;
-    margin-bottom:3px;
   }
   .role-val{
     font-weight:600;
@@ -213,12 +260,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>הסעות שישי · דבירה</h1>
+    <h1>הסעות שישי · דביר</h1>
     <p>שנת הלימודים תשפ"ז</p>
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="byName">לפי משפחה</button>
+    <button class="tab-btn active" data-tab="byName">לפי שם</button>
     <button class="tab-btn" data-tab="byDate">לפי תאריך</button>
   </div>
 
@@ -246,10 +293,10 @@
     {
       "date": "2026-09-04",
       "shift": "בוקר",
-      "bus1": "קרואני - שגיא/דנה",
-      "bus2": "פרילוצקי - רומן ישר/אינה",
+      "bus1": "דוידסון - רונן אנד/עמית",
+      "bus2": "כהן - יהודה או/אסתי",
       "bus3": "אפרתי - נעם/המיה",
-      "car": "חזן - גיא/נועה סול"
+      "car": "סקג'ו - איל/שירן"
     },
     {
       "date": "2026-09-04",
@@ -263,9 +310,9 @@
       "date": "2026-09-18",
       "shift": "בוקר",
       "bus1": "פרץ - דניאל/נואי",
-      "bus2": "כהן - יהודה או/אסתי",
+      "bus2": "פרילוצקי - רומן ישר/אינה",
       "bus3": "ויסברג - איתי/איילת צי",
-      "car": "שואף - טל/איילת"
+      "car": "פונגסידה עלמא - סאווירט/שי"
     },
     {
       "date": "2026-09-18",
@@ -288,7 +335,7 @@
       "shift": "צהריים",
       "bus1": "פוגל יצחקי - שלומי/מיכל",
       "bus2": "איאש - אביתר/מיכל",
-      "bus3": "גור - ינון/מיטל",
+      "bus3": "פרי - שלומי/איסי לי",
       "car": "פרידמן אהרון - עודד/מיכל"
     },
     {
@@ -303,7 +350,7 @@
       "date": "2026-10-16",
       "shift": "צהריים",
       "bus1": "להב - ערן (דוד/יערה",
-      "bus2": "בקון מזור - דגן/הגר",
+      "bus2": "קלפון - אליאב/אורית",
       "bus3": "הרוש - ניר/רינת",
       "car": "פארן - נוה/אפרת"
     },
@@ -320,7 +367,7 @@
       "shift": "צהריים",
       "bus1": "בנימין יובל - יונתן לואיס/הדס",
       "bus2": "מולכו - נועם/אנטל",
-      "bus3": "פרי - שלומי/איסי לי",
+      "bus3": "גור - ינון/מיטל",
       "car": "ברטוב גל - שי/אורלי דב"
     },
     {
@@ -342,17 +389,17 @@
     {
       "date": "2026-11-06",
       "shift": "בוקר",
-      "bus1": "דוידסון - רונן אנד/עמית",
+      "bus1": "קרואני - שגיא/דנה",
       "bus2": "לוין - ליאור/ברית",
       "bus3": "טיאר - צחי/אדוה גילה",
-      "car": "מרקו - עידו/טל"
+      "car": "תורג'מן - עופר/הדס"
     },
     {
       "date": "2026-11-06",
       "shift": "צהריים",
-      "bus1": "בקון - דקל/מור",
+      "bus1": "לוין - ליאור/ברית",
       "bus2": "אליהו - הדר/לימור",
-      "bus3": "גרבי - דרור ישר/הלה",
+      "bus3": "קליינר - טל/מיכל שרית",
       "car": "וייס - שחר/מיטל"
     },
     {
@@ -391,7 +438,7 @@
       "date": "2026-11-27",
       "shift": "בוקר",
       "bus1": "כהן - אמציה/רביד",
-      "bus2": "קליינר - טל/מיכל שרית",
+      "bus2": "גרבי - דרור ישר/הלה",
       "bus3": "אגאי - ערן/ליאת",
       "car": "בס מתאו - אליעזר/שימרית עירית"
     },
@@ -425,7 +472,7 @@
       "bus1": "חורין - גלעד/ספיר",
       "bus2": "מאיר - נתן/חן",
       "bus3": "ווינטראוב - אורן נחמן/קרן",
-      "car": "כרמל - כרמל-אבא/מיכל"
+      "car": "כרמל - אלעד/מיכל"
     },
     {
       "date": "2026-12-18",
@@ -505,7 +552,7 @@
       "bus1": "להב - ערן (דוד/יערה",
       "bus2": "פארן - נוה/אפרת",
       "bus3": "ברטוב גל - שי/אורלי דב",
-      "car": "סקג'ו - איל/שירן"
+      "car": "חזן - גיא/נועה סול"
     },
     {
       "date": "2027-01-22",
@@ -542,9 +589,9 @@
     {
       "date": "2027-02-05",
       "shift": "צהריים",
-      "bus1": "לוין - ליאור/ברית",
+      "bus1": "בקון - דקל/מור",
       "bus2": "דוידסון - רונן אנד/עמית",
-      "bus3": "מרקו - עידו/טל",
+      "bus3": "קרימרמן איתן - מטיאס גב/אשרה",
       "car": "גרבי - דרור ישר/הלה"
     },
     {
@@ -552,7 +599,7 @@
       "shift": "בוקר",
       "bus1": "אליהו - הדר/לימור",
       "bus2": "וייס - שחר/מיטל",
-      "bus3": "קלפון - אליאב/אורית",
+      "bus3": "שגיא - יפתח מאי/טל",
       "car": "טיאר - צחי/אדוה גילה"
     },
     {
@@ -560,7 +607,7 @@
       "shift": "צהריים",
       "bus1": "זר - נפתלי אליעזר/עדן",
       "bus2": "ליבוביץ - אלון/דקלה צבי",
-      "bus3": "שגיא - יפתח מאי/טל",
+      "bus3": "קלפון - אליאב/אורית",
       "car": "ישנו - אורי/ליאור"
     },
     {
@@ -617,12 +664,12 @@
       "bus1": "יעקובי רנן - יניב/הילה",
       "bus2": "קלוגמן - ראובן/חנית",
       "bus3": "רפפורט - אביב/ענת",
-      "car": "פונגסידה עלמא - סאווירט/שי"
+      "car": "שואף - טל/איילת"
     },
     {
       "date": "2027-03-12",
       "shift": "צהריים",
-      "bus1": "כרמל - כרמל-אבא/מיכל",
+      "bus1": "כרמל - אלעד/מיכל",
       "bus2": "מאיר - נתן/חן",
       "bus3": "ווינטראוב - אורן נחמן/קרן",
       "car": "יונקמן - נעם/פלג"
@@ -638,9 +685,9 @@
     {
       "date": "2027-03-19",
       "shift": "צהריים",
-      "bus1": "אלימלך - דור/רות",
+      "bus1": "מקלר - רן/עדי",
       "bus2": "נחליאלי - גיל-עד י/עדי",
-      "bus3": "מקלר - רן/עדי",
+      "bus3": "אלימלך - דור/רות",
       "car": "קרואני - שגיא/דנה"
     },
     {
@@ -736,7 +783,7 @@
       "shift": "צהריים",
       "bus1": "גולדפרב - שימי/אורטל",
       "bus2": "שדמי חיון - ליאור/רוני",
-      "bus3": "הרוש - ניר/רינת",
+      "bus3": "מאיר - נתן/חן",
       "car": "בירקנפלד - גל/לילי"
     },
     {
@@ -758,9 +805,9 @@
     {
       "date": "2027-05-28",
       "shift": "בוקר",
-      "bus1": "לוין - ליאור/ברית",
+      "bus1": "מקלר - רן/עדי",
       "bus2": "דוידסון - רונן אנד/עמית",
-      "bus3": "מרקו - עידו/טל",
+      "bus3": "נחליאלי - גיל-עד י/עדי",
       "car": "גונן - לירון/אולגה"
     },
     {
@@ -769,7 +816,7 @@
       "bus1": "אליהו - הדר/לימור",
       "bus2": "שגיא - יפתח מאי/טל",
       "bus3": "זר - נפתלי אליעזר/עדן",
-      "car": "קלפון - אליאב/אורית"
+      "car": "בקון מזור - דגן/הגר"
     },
     {
       "date": "2027-06-04",
@@ -814,7 +861,7 @@
     {
       "date": "2027-06-25",
       "shift": "צהריים",
-      "bus1": "כרמל - כרמל-אבא/מיכל",
+      "bus1": "כרמל - אלעד/מיכל",
       "bus2": "פריד - אמיר יעק/טלי",
       "bus3": "רפפורט - אביב/ענת",
       "car": "ווינטראוב - אורן נחמן/קרן"
@@ -880,7 +927,7 @@
     "כהן - יהודה או/אסתי",
     "כהן - מתן/רותם",
     "כהן - עפר/יעל",
-    "כרמל - כרמל-אבא/מיכל",
+    "כרמל - אלעד/מיכל",
     "להב - ערן (דוד/יערה",
     "לוין - ליאור/ברית",
     "ליבוביץ - אלון/דקלה צבי",
@@ -888,7 +935,6 @@
     "מאיר - נתן/חן",
     "מולכו - נועם/אנטל",
     "מקלר - רן/עדי",
-    "מרקו - עידו/טל",
     "נאור - אחיקם/ליטל",
     "נחליאלי - גיל-עד י/עדי",
     "סהר - יתיר/קרן שמש",
@@ -923,7 +969,7 @@
   ],
   "phones": {
     "אגאי - ערן/ליאת": "054-7103394 / 054-5541050",
-    "אוזרסקי קורן - ודים/ירדן": "054-7916961",
+    "אוזרסקי קורן - ודים/ירדן": "054-5984412 / 054-7916961",
     "אטיאס - יקיר/גל": "054-7000690",
     "איאש - אביתר/מיכל": "052-2624333 / 054-8060750",
     "אל אל - שרון/סיון": "054-6672322 / 054-5661581",
@@ -981,7 +1027,7 @@
     "כהן - יהודה או/אסתי": "054-4882230 / 052-7798329",
     "כהן - מתן/רותם": "050-5345541",
     "כהן - עפר/יעל": "052-7482843 / 054-2459124",
-    "כרמל - כרמל-אבא/מיכל": "050-4899495",
+    "כרמל - אלעד/מיכל": "050-8335225 / 050-4899495",
     "להב - ערן (דוד/יערה": "054-2561461 / 058-6862244",
     "לוין - ליאור/ברית": "052-8105283 / 054-5292052",
     "ליבוביץ - אלון/דקלה צבי": "052-6126550 / 052-6126550",
@@ -989,7 +1035,6 @@
     "מאיר - נתן/חן": "054-4612544 / 054-6677241",
     "מולכו - נועם/אנטל": "054-7887333 / 054-2065660",
     "מקלר - רן/עדי": "050-9441076 / 052-6055287",
-    "מרקו - עידו/טל": "054-6532009 / 058-6252548",
     "נאור - אחיקם/ליטל": "054-331-7288 / 054-4563069",
     "נחליאלי - גיל-עד י/עדי": "054-7784438 / 052-9450838",
     "סהר - יתיר/קרן שמש": "050-6239124 / 054-7714010",
@@ -1043,6 +1088,25 @@ function roleChip(role){
   return `<span class="role-name"><span class="dot" style="background:${role.color}"></span>${role.label}</span>`;
 }
 
+function googleCalendarUrl(dateIso, shiftLabel, roleLabel){
+  const dateStr = dateIso.replace(/-/g,'');
+  const isMorning = shiftLabel === 'בוקר';
+  const title = isMorning ? 'ליווי הסעות הלוך' : 'ליווי הסעות חזור';
+  const startTime = isMorning ? '071500' : '111500';
+  const endTime = isMorning ? '081500' : '121500';
+  const titleEnc = encodeURIComponent(title);
+  const details = encodeURIComponent(`${roleLabel} - לוח ההסעות של ימי שישי, דביר`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titleEnc}` +
+         `&dates=${dateStr}T${startTime}/${dateStr}T${endTime}&details=${details}&ctz=Asia/Jerusalem`;
+}
+
+const CAL_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+
+function calendarButton(dateIso, shiftLabel, roleLabel){
+  const url = googleCalendarUrl(dateIso, shiftLabel, roleLabel);
+  return `<a class="cal-btn" href="${url}" target="_blank" rel="noopener">${CAL_ICON}יומן</a>`;
+}
+
 function renderDateBlock(dateRows){
   let html = '';
   dateRows.forEach(row=>{
@@ -1051,7 +1115,8 @@ function renderDateBlock(dateRows){
       const name = row[role.key] || '—';
       const phone = DATA.phones[name];
       const phoneHtml = phone ? `<span class="role-phone">${phone}</span>` : '';
-      html += `<div class="role-line">${roleChip(role)}<span class="role-val">${name}${phoneHtml}</span></div>`;
+      const calHtml = calendarButton(row.date, row.shift, role.label);
+      html += `<div class="role-line"><div class="role-line-head">${roleChip(role)}${calHtml}</div><span class="role-val">${name}${phoneHtml}</span></div>`;
     });
     html += `</div>`;
   });
@@ -1120,10 +1185,18 @@ function initNameSearch(){
       return;
     }
 
+    const phone = DATA.phones[name];
+    const phoneBlockHtml = phone ? `<div class="name-phone">${phone}</div>` : '';
+
     matches.forEach(row=>{
       const card = document.createElement('div');
       card.className = 'result-card';
-      let inner = `<div class="date-row">${formatDate(row.date)}</div><div class="shift-row">${row.shift}</div>`;
+      const shiftClass = row.shift === 'בוקר' ? 'shift-morning' : 'shift-afternoon';
+      const matchedRole = ROLES.find(role => row[role.key] === name);
+      const calHtml = matchedRole ? calendarButton(row.date, row.shift, matchedRole.label) : '';
+      let inner = `<div class="card-head"><div class="date-row">${formatDate(row.date)}</div>${calHtml}</div>` +
+                  `<div class="shift-row ${shiftClass}">${row.shift}</div>` +
+                  phoneBlockHtml;
       ROLES.forEach(role=>{
         if(row[role.key] === name){
           inner += `<div class="chip" style="background:${role.bg};color:${role.color}"><span class="dot" style="background:${role.color}"></span>${role.label}</div>`;
