@@ -10,7 +10,7 @@ same way once deployed. Vercel just serves the one file as-is.
 
 ## First-time deployment
 
-1. Install Node.js if you don't have it (https://nodejs.org), then install the Vercel CLI:
+1. Install Node.js if you don't have it (https://nodejs.org), then install the Vercel CLI::
    ```
    npm i -g vercel
    ```
