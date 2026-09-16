@@ -1,0 +1,35 @@
+name: Thursday WhatsApp Reminders
+
+on:
+  schedule:
+    # Runs daily at 15:00 UTC (~17:00 or 18:00 Israel time, depending on
+    # daylight saving). The script itself checks whether tomorrow is an
+    # actual school Friday and no-ops otherwise, so running daily (rather
+    # than trying to pin the cron to "Thursdays only") sidesteps timezone/
+    # DST edge cases around what counts as "Thursday" in UTC vs Israel time.
+    - cron: '0 15 * * *'
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab, for testing
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Twilio SDK
+        run: npm install twilio
+
+      - name: Send reminders
+        run: node .github/scripts/send-reminders.js
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_TEMPLATE_BUS_MORNING: ${{ secrets.TWILIO_TEMPLATE_BUS_MORNING }}
+          TWILIO_TEMPLATE_BUS_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_BUS_AFTERNOON }}
+          TWILIO_TEMPLATE_CAR_MORNING: ${{ secrets.TWILIO_TEMPLATE_CAR_MORNING }}
+          TWILIO_TEMPLATE_CAR_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_CAR_AFTERNOON }}
