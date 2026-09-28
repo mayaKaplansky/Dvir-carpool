@@ -12,6 +12,12 @@
  * whether there's anything to do today, so the workflow doesn't need any
  * day-of-week or timezone/DST logic.
  *
+ * Optional test controls (set from the workflow's "Run workflow" form):
+ *   DRY_RUN=true      print what would be sent, send nothing
+ *   TARGET_DATE       YYYY-MM-DD, act as if that were "tomorrow"
+ *   TEST_TO           a phone number; sends ONE message per template (4 total)
+ *                     to that number only, ignoring the schedule and parents
+ *
  * Required environment variables (set as GitHub repo secrets):
  *   TWILIO_ACCOUNT_SID
  *   TWILIO_AUTH_TOKEN
@@ -69,19 +75,54 @@ function toE164(rawPhone) {
 }
 
 async function main() {
-  const data = loadData();
-  const targetDate = tomorrowInIsrael();
-  const rows = data.schedule.filter(r => r.date === targetDate);
+  const dryRun = String(process.env.DRY_RUN || '').toLowerCase() === 'true';
+  const testTo = (process.env.TEST_TO || '').trim();
+  const targetDate = (process.env.TARGET_DATE || '').trim() || tomorrowInIsrael();
 
-  if (rows.length === 0) {
-    console.log(`No school-day assignments for ${targetDate} (tomorrow). Nothing to send.`);
+  const client = dryRun ? null : twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+  const fromNumber = `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`;
+
+  async function deliver(label, to, templateSid) {
+    if (dryRun) {
+      console.log(`  [dry run] would send -> ${label} (${to}) template ${templateSid}`);
+      return true;
+    }
+    try {
+      await client.messages.create({ from: fromNumber, to: `whatsapp:${to}`, contentSid: templateSid });
+      console.log(`  sent -> ${label} (${to})`);
+      return true;
+    } catch (err) {
+      console.error(`  FAILED -> ${label} (${to}): ${err.message}`);
+      return false;
+    }
+  }
+
+  // ---- TEST MODE: one message per template to a single number ----
+  if (testTo) {
+    const to = toE164(testTo);
+    if (!to) throw new Error(`TEST_TO "${testTo}" is not a usable phone number`);
+    console.log(`TEST MODE: sending each of the 4 templates once to ${to}${dryRun ? ' (dry run)' : ''}`);
+    const combos = [['בוקר', 'bus'], ['צהריים', 'bus'], ['בוקר', 'car'], ['צהריים', 'car']];
+    let ok = 0, bad = 0;
+    for (const [shift, type] of combos) {
+      const sid = templateSidFor(shift, type);
+      if (!sid) { console.error(`  MISSING secret for ${type}/${shift}`); bad++; continue; }
+      (await deliver(`${type}/${shift}`, to, sid)) ? ok++ : bad++;
+    }
+    console.log(`\nTest done. OK: ${ok}, Failed: ${bad}`);
     return;
   }
 
-  console.log(`Tomorrow (${targetDate}) is a school Friday. Sending reminders for ${rows.length} shift(s)...`);
+  // ---- NORMAL MODE ----
+  const data = loadData();
+  const rows = data.schedule.filter(r => r.date === targetDate);
 
-  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  const fromNumber = `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`;
+  if (rows.length === 0) {
+    console.log(`No school-day assignments for ${targetDate}. Nothing to send.`);
+    return;
+  }
+
+  console.log(`${targetDate}: sending reminders for ${rows.length} shift(s)${dryRun ? ' (DRY RUN)' : ''}...`);
 
   let sent = 0, failed = 0;
   const skippedNoPhone = [];
@@ -99,28 +140,22 @@ async function main() {
       }
 
       const templateSid = templateSidFor(row.shift, role.type);
+      if (!templateSid) { console.error(`  MISSING template secret for ${role.type}/${row.shift}`); failed++; continue; }
 
+      // Some families have the same number recorded for both parents --
+      // message each distinct number only once.
+      const seen = new Set();
       for (const rawNum of numbers) {
         const to = toE164(rawNum);
         if (!to) { skippedNoPhone.push(`${familyName} (${rawNum})`); continue; }
-
-        try {
-          await client.messages.create({
-            from: fromNumber,
-            to: `whatsapp:${to}`,
-            contentSid: templateSid,
-          });
-          sent++;
-          console.log(`  sent -> ${familyName} (${to}) [${row.shift} / ${role.type}]`);
-        } catch (err) {
-          failed++;
-          console.error(`  FAILED -> ${familyName} (${to}): ${err.message}`);
-        }
+        if (seen.has(to)) continue;
+        seen.add(to);
+        (await deliver(`${familyName} [${row.shift} / ${role.type}]`, to, templateSid)) ? sent++ : failed++;
       }
     }
   }
 
-  console.log(`\nDone. Sent: ${sent}, Failed: ${failed}`);
+  console.log(`\nDone. ${dryRun ? 'Would send' : 'Sent'}: ${sent}, Failed: ${failed}`);
   if (skippedNoPhone.length) {
     console.log('Skipped (no usable phone number on file):', skippedNoPhone.join(', '));
   }
