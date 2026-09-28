@@ -4,21 +4,32 @@ on:
   schedule:
     # Runs daily at 15:00 UTC (~17:00 or 18:00 Israel time, depending on
     # daylight saving). The script itself checks whether tomorrow is an
-    # actual school Friday and no-ops otherwise, so running daily (rather
-    # than trying to pin the cron to "Thursdays only") sidesteps timezone/
-    # DST edge cases around what counts as "Thursday" in UTC vs Israel time.
+    # actual school Friday and no-ops otherwise.
     - cron: '0 15 * * *'
-  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab, for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run - print who would be messaged, send nothing"
+        type: boolean
+        default: true
+      target_date:
+        description: "Pretend this is 'tomorrow' (YYYY-MM-DD). Leave empty for the real tomorrow."
+        type: string
+        required: false
+      test_to:
+        description: "Test mode - send the 4 templates once each to THIS number only (e.g. 050-1234567). Leave empty for normal mode."
+        type: string
+        required: false
 
 jobs:
   send-reminders:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Twilio SDK
         run: npm install twilio
@@ -26,6 +37,10 @@ jobs:
       - name: Send reminders
         run: node .github/scripts/send-reminders.js
         env:
+          # Scheduled runs have no inputs, so DRY_RUN is empty there = real send.
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          TARGET_DATE: ${{ github.event.inputs.target_date }}
+          TEST_TO: ${{ github.event.inputs.test_to }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
