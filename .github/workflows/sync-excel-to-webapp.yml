@@ -13,7 +13,9 @@ jobs:
   update-webapp:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # full history, so we can tell which file was committed last
 
       - uses: actions/setup-python@v5
         with:
@@ -22,16 +24,32 @@ jobs:
       - name: Install dependencies
         run: pip install openpyxl
 
-      - name: Find the Excel file
+      - name: Find the most recently uploaded Excel file
         id: find_xlsx
         run: |
-          FILE=$(ls -1 *.xlsx 2>/dev/null | head -n 1)
-          if [ -z "$FILE" ]; then
+          newest=""
+          newest_ts=0
+          count=0
+          while IFS= read -r -d '' f; do
+            f="${f#./}"
+            count=$((count+1))
+            ts=$(git log -1 --format=%ct -- "$f")
+            echo "  candidate: $f (last committed: $(date -u -d @"${ts:-0}" '+%Y-%m-%d %H:%M:%S UTC'))"
+            if [ "${ts:-0}" -gt "$newest_ts" ]; then
+              newest_ts="$ts"
+              newest="$f"
+            fi
+          done < <(find . -maxdepth 1 -name '*.xlsx' -print0)
+
+          if [ -z "$newest" ]; then
             echo "No .xlsx file found in the repo root -- nothing to do."
             exit 1
           fi
-          echo "Using file: $FILE"
-          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          if [ "$count" -gt 1 ]; then
+            echo "::warning::Found $count .xlsx files in the repo root. Using the most recently committed one. Delete the old copies to avoid confusion."
+          fi
+          echo "Using file: $newest"
+          echo "file=$newest" >> "$GITHUB_OUTPUT"
 
       - name: Regenerate index.html from the Excel file
         run: python update_data.py "${{ steps.find_xlsx.outputs.file }}"
