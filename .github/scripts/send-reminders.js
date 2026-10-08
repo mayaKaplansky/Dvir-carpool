@@ -12,16 +12,24 @@
  * whether there's anything to do today, so the workflow doesn't need any
  * day-of-week or timezone/DST logic.
  *
+ * Safe to run many times: every successful send is recorded in
+ * .reminders-sent/<date>.json (committed back to the repo by the workflow),
+ * and a recipient already recorded for that date + shift + role is skipped.
+ * So the workflow can fire several times on Thursday (GitHub often delays
+ * scheduled runs) and nobody gets a duplicate; a later run only retries
+ * what failed or was missed.
+ *
  * Optional test controls (set from the workflow's "Run workflow" form):
  *   DRY_RUN=true      print what would be sent, send nothing
  *   TARGET_DATE       YYYY-MM-DD, act as if that were "tomorrow"
+ *   RESEND=true       ignore the sent-markers and send to everyone again
  *   TEST_TO           a phone number; sends ONE message per template (4 total)
  *                     to that number only, ignoring the schedule and parents
  *
  * Required environment variables (set as GitHub repo secrets):
  *   TWILIO_ACCOUNT_SID
  *   TWILIO_AUTH_TOKEN
- *   TWILIO_WHATSAPP_FROM         e.g. "+972837622229" (no "whatsapp:" prefix)
+ *   TWILIO_WHATSAPP_FROM         e.g. "+97283762229" (no "whatsapp:" prefix)
  *   TWILIO_TEMPLATE_BUS_MORNING
  *   TWILIO_TEMPLATE_BUS_AFTERNOON
  *   TWILIO_TEMPLATE_CAR_MORNING
@@ -29,6 +37,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const twilio = require('twilio');
 
 const ROLES = [
@@ -44,6 +53,27 @@ function templateSidFor(shift, roleType) {
     return isMorning ? process.env.TWILIO_TEMPLATE_BUS_MORNING : process.env.TWILIO_TEMPLATE_BUS_AFTERNOON;
   }
   return isMorning ? process.env.TWILIO_TEMPLATE_CAR_MORNING : process.env.TWILIO_TEMPLATE_CAR_AFTERNOON;
+}
+
+const SENT_DIR = path.join(__dirname, '..', '..', '.reminders-sent');
+
+function loadSent(date) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(SENT_DIR, `${date}.json`), 'utf-8'));
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveSent(date, sent) {
+  fs.mkdirSync(SENT_DIR, { recursive: true });
+  fs.writeFileSync(path.join(SENT_DIR, `${date}.json`), JSON.stringify(sent, null, 2) + '\n');
+}
+
+function israelHour() {
+  return Number(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem', hour: '2-digit', hour12: false,
+  }).format(new Date())) % 24;
 }
 
 function loadData() {
@@ -77,7 +107,16 @@ function toE164(rawPhone) {
 async function main() {
   const dryRun = String(process.env.DRY_RUN || '').toLowerCase() === 'true';
   const testTo = (process.env.TEST_TO || '').trim();
+  const resend = String(process.env.RESEND || '').toLowerCase() === 'true';
+  const isScheduled = process.env.EVENT_NAME === 'schedule';
   const targetDate = (process.env.TARGET_DATE || '').trim() || tomorrowInIsrael();
+
+  // The workflow has several scheduled attempts spread over Thursday. Don't
+  // send in the small hours or too early in the day, whenever GitHub fires.
+  if (isScheduled && israelHour() < 16) {
+    console.log(`Israel time is before 16:00 (hour ${israelHour()}). Too early - a later attempt will send. Nothing done.`);
+    return;
+  }
 
   const client = dryRun ? null : twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
   const fromNumber = `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`;
@@ -122,9 +161,10 @@ async function main() {
     return;
   }
 
-  console.log(`${targetDate}: sending reminders for ${rows.length} shift(s)${dryRun ? ' (DRY RUN)' : ''}...`);
+  console.log(`${targetDate}: sending reminders for ${rows.length} shift(s)${dryRun ? ' (DRY RUN)' : ''}${resend ? ' (RESEND: ignoring sent-markers)' : ''}...`);
 
-  let sent = 0, failed = 0;
+  const sentMarkers = resend ? {} : loadSent(targetDate);
+  let sent = 0, failed = 0, alreadySent = 0;
   const skippedNoPhone = [];
 
   for (const row of rows) {
@@ -150,15 +190,32 @@ async function main() {
         if (!to) { skippedNoPhone.push(`${familyName} (${rawNum})`); continue; }
         if (seen.has(to)) continue;
         seen.add(to);
-        (await deliver(`${familyName} [${row.shift} / ${role.type}]`, to, templateSid)) ? sent++ : failed++;
+
+        // Hashed, so no phone numbers end up in the repo's record files.
+        const markerKey = crypto.createHash('sha256').update(`${to}|${row.shift}|${role.key}`).digest('hex').slice(0, 20);
+        if (sentMarkers[markerKey]) { alreadySent++; continue; }
+
+        const ok = await deliver(`${familyName} [${row.shift} / ${role.type}]`, to, templateSid);
+        if (ok) {
+          sent++;
+          if (!dryRun) {
+            sentMarkers[markerKey] = { family: familyName, at: new Date().toISOString() };
+            saveSent(targetDate, sentMarkers); // save after every send, in case the run dies midway
+          }
+        } else {
+          failed++;
+        }
       }
     }
   }
 
-  console.log(`\nDone. ${dryRun ? 'Would send' : 'Sent'}: ${sent}, Failed: ${failed}`);
+  console.log(`\nDone. ${dryRun ? 'Would send' : 'Sent'}: ${sent}, Already sent earlier (skipped): ${alreadySent}, Failed: ${failed}`);
   if (skippedNoPhone.length) {
     console.log('Skipped (no usable phone number on file):', skippedNoPhone.join(', '));
   }
+  // A non-zero exit marks the run red so you notice; the next scheduled
+  // attempt retries only the ones that failed.
+  if (failed > 0) process.exitCode = 1;
 }
 
 main().catch(err => {
