@@ -2,16 +2,27 @@ name: Thursday WhatsApp Reminders
 
 on:
   schedule:
-    # Runs daily at 15:00 UTC (~17:00 or 18:00 Israel time, depending on
-    # daylight saving). The script itself checks whether tomorrow is an
-    # actual school Friday and no-ops otherwise.
-    - cron: '0 15 * * *'
+    # GitHub often starts scheduled runs hours late, so instead of one
+    # attempt we make several on Thursdays (UTC times; Israel is UTC+3 in
+    # summer, UTC+2 in winter). They are safe to repeat: the script records
+    # every successful send and never messages the same person twice, and it
+    # does nothing before 16:00 Israel time. Later attempts only retry
+    # whatever failed or was missed.
+    - cron: '17 13 * * 4'
+    - cron: '47 14 * * 4'
+    - cron: '17 16 * * 4'
+    - cron: '47 17 * * 4'
+    - cron: '17 19 * * 4'
   workflow_dispatch:
     inputs:
       dry_run:
         description: "Dry run - print who would be messaged, send nothing"
         type: boolean
         default: true
+      resend:
+        description: "Resend to EVERYONE again, ignoring who was already messaged"
+        type: boolean
+        default: false
       target_date:
         description: "Pretend this is 'tomorrow' (YYYY-MM-DD). Leave empty for the real tomorrow."
         type: string
@@ -20,6 +31,15 @@ on:
         description: "Test mode - send the 4 templates once each to THIS number only (e.g. 050-1234567). Leave empty for normal mode."
         type: string
         required: false
+
+# Needed so the run can save its "already sent" record back to the repo.
+permissions:
+  contents: write
+
+# Never let two runs overlap (that is how duplicates would happen).
+concurrency:
+  group: thursday-reminders
+  cancel-in-progress: false
 
 jobs:
   send-reminders:
@@ -37,8 +57,10 @@ jobs:
       - name: Send reminders
         run: node .github/scripts/send-reminders.js
         env:
-          # Scheduled runs have no inputs, so DRY_RUN is empty there = real send.
+          EVENT_NAME: ${{ github.event_name }}
+          # Scheduled runs have no inputs, so these are empty there (= real send).
           DRY_RUN: ${{ github.event.inputs.dry_run }}
+          RESEND: ${{ github.event.inputs.resend }}
           TARGET_DATE: ${{ github.event.inputs.target_date }}
           TEST_TO: ${{ github.event.inputs.test_to }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
@@ -48,3 +70,20 @@ jobs:
           TWILIO_TEMPLATE_BUS_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_BUS_AFTERNOON }}
           TWILIO_TEMPLATE_CAR_MORNING: ${{ secrets.TWILIO_TEMPLATE_CAR_MORNING }}
           TWILIO_TEMPLATE_CAR_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_CAR_AFTERNOON }}
+
+      # Runs even if some sends failed, so what DID go out is remembered.
+      - name: Save record of sent reminders
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .reminders-sent 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No new sends to record."
+          else
+            git commit -m "Record sent WhatsApp reminders [skip ci]"
+            for i in 1 2 3; do
+              git pull --rebase && git push && break
+              sleep 5
+            done
+          fi
