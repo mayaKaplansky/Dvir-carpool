@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>סטטוס תשובות – הסעות דביר</title>
+<style>
+  :root{
+    --bg:#FAFAF8; --card:#FFFFFF; --ink:#1C2333; --ink-soft:#5B6172; --border:#E4E2DA;
+    --bus1:#2F6FED; --bus1-bg:#E9F0FE; --bus2:#B8860B; --bus2-bg:#FBF1DA;
+    --bus3:#1F9D6B; --bus3-bg:#E5F6EE; --car:#6B5CA5; --car-bg:#EFEBF7;
+    --ok:#1F9D6B; --ok-bg:#E5F6EE; --wait:#C2410C; --wait-bg:#FDEEE4;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","Arial Hebrew","Heebo",Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px;}
+  h1{font-size:20px;margin:0 0 14px;font-weight:700;}
+  .hidden{display:none !important;}
+  input,select,button{font-family:inherit;}
+  input[type=password],select{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--border);
+    border-radius:9px;background:var(--card);color:var(--ink);}
+  .btn{border:none;background:var(--ink);color:#fff;font-size:15px;font-weight:600;padding:11px 16px;border-radius:9px;cursor:pointer;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--border);}
+  .err{color:#B42318;font-size:14px;margin:8px 0 0;min-height:18px;}
+  .bar{display:flex;gap:8px;margin-bottom:12px;}
+  .bar select{flex:1;}
+  .summary{display:flex;gap:10px;margin-bottom:6px;}
+  .stat{flex:1;border-radius:12px;padding:12px 14px;border:1px solid var(--border);background:var(--card);}
+  .stat b{display:block;font-size:28px;line-height:1.1;}
+  .stat span{font-size:13px;color:var(--ink-soft);}
+  .stat.ok b{color:var(--ok);} .stat.wait b{color:var(--wait);}
+  .updated{font-size:12px;color:var(--ink-soft);margin:6px 2px 18px;}
+  h2{font-size:16px;margin:22px 0 10px;display:flex;align-items:center;gap:8px;}
+  h2 .n{font-size:13px;font-weight:600;border-radius:999px;padding:1px 9px;}
+  h2.wait .n{background:var(--wait-bg);color:var(--wait);}
+  h2.ok .n{background:var(--ok-bg);color:var(--ok);}
+  h2.other .n{background:#EEE;color:var(--ink-soft);}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .card.wait{border-right:4px solid var(--wait);} .card.ok{border-right:4px solid var(--ok);}
+  .fam{font-weight:700;font-size:16px;margin-bottom:6px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .chip{font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:999px;}
+  .chip.bus1{background:var(--bus1-bg);color:var(--bus1);} .chip.bus2{background:var(--bus2-bg);color:var(--bus2);}
+  .chip.bus3{background:var(--bus3-bg);color:var(--bus3);} .chip.car{background:var(--car-bg);color:var(--car);}
+  .contacts{display:flex;flex-wrap:wrap;gap:8px;}
+  .contacts a{font-size:14px;text-decoration:none;color:var(--ink);border:1px solid var(--border);
+    border-radius:8px;padding:6px 10px;direction:ltr;unicode-bidi:plaintext;}
+  .reply{background:#F5F5F1;border-radius:9px;padding:9px 11px;margin-top:6px;}
+  .reply .txt{font-size:16px;white-space:pre-wrap;word-break:break-word;}
+  .reply .meta{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .empty{color:var(--ink-soft);font-size:14px;padding:6px 2px;}
+  .login{margin-top:40px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>סטטוס תשובות – הסעות דביר</h1>
+
+  <div id="login" class="login hidden">
+    <input type="password" id="pw" placeholder="סיסמה" autocomplete="current-password">
+    <p class="err" id="loginErr"></p>
+    <button class="btn" id="loginBtn" style="width:100%">כניסה</button>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="bar">
+      <select id="dateSel" aria-label="תאריך"></select>
+      <button class="btn ghost" id="refresh" aria-label="רענון">רענון</button>
+    </div>
+    <div class="summary">
+      <div class="stat ok"><b id="nOk">0</b><span>משפחות שענו</span></div>
+      <div class="stat wait"><b id="nWait">0</b><span>עוד לא ענו</span></div>
+    </div>
+    <div class="updated" id="updated"></div>
+    <p class="err" id="mainErr"></p>
+
+    <h2 class="wait">עדיין לא ענו <span class="n" id="cWait">0</span></h2>
+    <div id="waitList"></div>
+
+    <h2 class="ok">ענו <span class="n" id="cOk">0</span></h2>
+    <div id="okList"></div>
+
+    <h2 class="other">הודעות ממספרים אחרים <span class="n" id="cOther">0</span></h2>
+    <div id="otherList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const ROLE_LABEL = {bus1:'אוטובוס 1 (א,ב)', bus2:'אוטובוס 2 (ג,ו)', bus3:'אוטובוס 3 (ד,ה)', car:'רכב'};
+  const ROLES = ['bus1','bus2','bus3','car'];
+  const $ = id => document.getElementById(id);
+  let data = null, replies = [], timer = null;
+
+  function getPw(){ try { return localStorage.getItem('repliesPw') || ''; } catch(e){ return ''; } }
+  function setPw(v){ try { v ? localStorage.setItem('repliesPw', v) : localStorage.removeItem('repliesPw'); } catch(e){} }
+
+  function toE164(raw){
+    const d = String(raw).replace(/\D/g,'');
+    if (!d) return null;
+    return '+972' + (d.startsWith('0') ? d.slice(1) : d.startsWith('972') ? d.slice(3) : d);
+  }
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;   // never innerHTML: replies are untrusted text
+    return e;
+  }
+  function todayIsrael(){
+    return new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Jerusalem'}).format(new Date());
+  }
+  function fmtDate(d){ const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; }
+  function fmtTime(iso){
+    return new Intl.DateTimeFormat('he-IL', {timeZone:'Asia/Jerusalem', weekday:'short', day:'numeric', month:'numeric', hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date(iso));
+  }
+
+  async function loadSchedule(){
+    const html = await (await fetch('/index.html', {cache:'no-store'})).text();
+    const m = html.match(/<script id="schedule-data" type="application\/json">\n([\s\S]*?)\n<\/script>/);
+    if (!m) throw new Error('לא נמצא לוח ההסעות');
+    data = JSON.parse(m[1]);
+    const dates = [...new Set(data.schedule.map(r => r.date))].sort();
+    const today = todayIsrael();
+    const def = dates.find(d => d >= today) || dates[dates.length-1];
+    const sel = $('dateSel');
+    sel.textContent = '';
+    dates.forEach(d => { const o = el('option', '', fmtDate(d)); o.value = d; if (d === def) o.selected = true; sel.appendChild(o); });
+  }
+
+  async function loadReplies(){
+    $('mainErr').textContent = '';
+    const r = await fetch('/api/replies', {headers:{Authorization:'Bearer ' + getPw()}, cache:'no-store'});
+    if (r.status === 401) { setPw(''); showLogin('סיסמה שגויה'); return false; }
+    if (!r.ok) { $('mainErr').textContent = 'שגיאה בטעינת התשובות'; return true; }
+    replies = (await r.json()).replies || [];
+    $('updated').textContent = 'עודכן ' + new Intl.DateTimeFormat('he-IL', {timeZone:'Asia/Jerusalem', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false}).format(new Date());
+    return true;
+  }
+
+  function render(){
+    if (!data) return;
+    const date = $('dateSel').value;
+    // family -> list of {shift, role}
+    const fams = new Map();
+    data.schedule.filter(r => r.date === date).forEach(r => {
+      ROLES.forEach(k => {
+        if (!r[k]) return;
+        if (!fams.has(r[k])) fams.set(r[k], []);
+        fams.get(r[k]).push({shift:r.shift, role:k});
+      });
+    });
+    // number -> family (only families on duty that day)
+    const byNumber = new Map();
+    fams.forEach((slots, fam) => {
+      (data.phones[fam] || '').split('/').map(s => toE164(s.trim())).filter(Boolean)
+        .forEach(n => { if (!byNumber.has(n)) byNumber.set(n, fam); });
+    });
+    // replies that belong to this Friday: Wednesday through Sunday around it
+    const base = Date.parse(date + 'T00:00:00Z');
+    const from = base - 2*864e5 - 3*36e5, to = base + 3*864e5;
+    const inWindow = replies.filter(r => { const t = Date.parse(r.at); return t >= from && t < to; });
+
+    const famReplies = new Map(), others = [];
+    inWindow.forEach(r => {
+      const fam = byNumber.get(r.from);
+      if (fam) { if (!famReplies.has(fam)) famReplies.set(fam, []); famReplies.get(fam).push(r); }
+      else others.push(r);
+    });
+
+    const waitEl = $('waitList'), okEl = $('okList'), otherEl = $('otherList');
+    waitEl.textContent = ''; okEl.textContent = ''; otherEl.textContent = '';
+    let nWait = 0, nOk = 0;
+
+    [...fams.keys()].sort((a,b) => a.localeCompare(b, 'he')).forEach(fam => {
+      const mine = (famReplies.get(fam) || []).sort((a,b) => Date.parse(a.at) - Date.parse(b.at));
+      const card = el('div', 'card ' + (mine.length ? 'ok' : 'wait'));
+      card.appendChild(el('div', 'fam', fam));
+      const chips = el('div', 'chips');
+      fams.get(fam).forEach(s => chips.appendChild(el('span', 'chip ' + s.role, `${s.shift} · ${ROLE_LABEL[s.role]}`)));
+      card.appendChild(chips);
+      if (mine.length) {
+        mine.forEach(r => {
+          const box = el('div', 'reply');
+          box.appendChild(el('div', 'txt', r.body || '(ללא טקסט)'));
+          box.appendChild(el('div', 'meta', `${r.name ? r.name + ' · ' : ''}${fmtTime(r.at)}`));
+          card.appendChild(box);
+        });
+        okEl.appendChild(card); nOk++;
+      } else {
+        const contacts = el('div', 'contacts');
+        (data.phones[fam] || '').split('/').map(s => s.trim()).filter(Boolean).forEach(p => {
+          const e164 = toE164(p);
+          const a = el('a', '', '📞 ' + p); a.href = 'tel:' + p.replace(/\D/g,''); contacts.appendChild(a);
+          if (e164) { const w = el('a', '', 'WhatsApp'); w.href = 'https://wa.me/' + e164.slice(1); w.target = '_blank'; w.rel = 'noopener'; contacts.appendChild(w); }
+        });
+        card.appendChild(contacts);
+        waitEl.appendChild(card); nWait++;
+      }
+    });
+
+    others.sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).forEach(r => {
+      const card = el('div', 'card');
+      card.appendChild(el('div', 'fam', r.name || r.from));
+      const box = el('div', 'reply');
+      box.appendChild(el('div', 'txt', r.body || '(ללא טקסט)'));
+      box.appendChild(el('div', 'meta', `${r.from} · ${fmtTime(r.at)}`));
+      card.appendChild(box);
+      otherEl.appendChild(card);
+    });
+
+    if (!nWait) waitEl.appendChild(el('div', 'empty', fams.size ? 'כולם ענו 🎉' : 'אין משמרות בתאריך זה'));
+    if (!nOk) okEl.appendChild(el('div', 'empty', 'עדיין אין תשובות'));
+    if (!others.length) otherEl.appendChild(el('div', 'empty', 'אין'));
+    $('nOk').textContent = nOk; $('nWait').textContent = nWait;
+    $('cOk').textContent = nOk; $('cWait').textContent = nWait; $('cOther').textContent = others.length;
+  }
+
+  function showLogin(msg){
+    clearInterval(timer);
+    $('main').classList.add('hidden'); $('login').classList.remove('hidden');
+    $('loginErr').textContent = msg || ''; $('pw').focus();
+  }
+
+  async function start(){
+    $('login').classList.add('hidden'); $('main').classList.remove('hidden');
+    try {
+      if (!data) await loadSchedule();
+      if (await loadReplies()) render();
+    } catch(e){ $('mainErr').textContent = String(e.message || e); }
+    clearInterval(timer);
+    timer = setInterval(async () => {
+      if (document.hidden) return;
+      try { if (await loadReplies()) render(); } catch(e){}
+    }, 30000);
+  }
+
+  $('loginBtn').onclick = () => { setPw($('pw').value); start(); };
+  $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+  $('refresh').onclick = async () => { try { if (await loadReplies()) render(); } catch(e){} };
+  $('dateSel').onchange = render;
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && getPw()) $('refresh').click(); });
+
+  getPw() ? start() : showLogin('');
+})();
+</script>
+</body>
+</html>
