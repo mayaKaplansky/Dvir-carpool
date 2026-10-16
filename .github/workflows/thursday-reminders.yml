@@ -2,12 +2,15 @@ name: Thursday WhatsApp Reminders
 
 on:
   schedule:
-    # GitHub often starts scheduled runs hours late, so instead of one
-    # attempt we make several on Thursdays (UTC times; Israel is UTC+3 in
-    # summer, UTC+2 in winter). They are safe to repeat: the script records
-    # every successful send and never messages the same person twice, and it
-    # does nothing before 16:00 Israel time. Later attempts only retry
-    # whatever failed or was missed.
+    # The reminders are SCHEDULED INSIDE TWILIO for Thursday 17:00 Israel time,
+    # so it does not matter if GitHub starts these runs hours late.
+    # Mon-Thu mornings: schedule (or re-sync) the coming Friday's reminders.
+    - cron: '17 6 * * 1-4'
+    # Wednesday afternoon: a second chance to schedule.
+    - cron: '17 13 * * 3'
+    # Thursday afternoon: last chance to schedule, then immediate catch-up
+    # sends for anything still missing (Twilio needs 15+ minutes' notice, so
+    # after ~16:40 Israel time the script sends right away instead).
     - cron: '17 13 * * 4'
     - cron: '47 14 * * 4'
     - cron: '17 16 * * 4'
@@ -16,27 +19,35 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run - print who would be messaged, send nothing"
+        description: "Dry run - print the plan, change/send nothing"
         type: boolean
         default: true
+      send_now:
+        description: "Send immediately instead of scheduling for Thursday 17:00"
+        type: boolean
+        default: false
       resend:
-        description: "Resend to EVERYONE again, ignoring who was already messaged"
+        description: "Cancel pending reminders and send to EVERYONE again, immediately"
         type: boolean
         default: false
       target_date:
-        description: "Pretend this is 'tomorrow' (YYYY-MM-DD). Leave empty for the real tomorrow."
+        description: "The Friday to handle (YYYY-MM-DD). Leave empty for the next school Friday."
         type: string
         required: false
       test_to:
-        description: "Test mode - send the 4 templates once each to THIS number only (e.g. 050-1234567). Leave empty for normal mode."
+        description: "Test mode - your own number (e.g. 050-1234567). Sends the 4 templates once each to THIS number only."
         type: string
         required: false
+      test_schedule:
+        description: "With test_to: instead schedule ONE test message to that number 16 minutes from now (proves scheduling works)"
+        type: boolean
+        default: false
 
-# Needed so the run can save its "already sent" record back to the repo.
+# Needed so the run can save its record of scheduled/sent reminders to the repo.
 permissions:
   contents: write
 
-# Never let two runs overlap (that is how duplicates would happen).
+# Never let two runs overlap.
 concurrency:
   group: thursday-reminders
   cancel-in-progress: false
@@ -54,34 +65,36 @@ jobs:
       - name: Install Twilio SDK
         run: npm install twilio
 
-      - name: Send reminders
+      - name: Schedule / send reminders
         run: node .github/scripts/send-reminders.js
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          # Scheduled runs have no inputs, so these are empty there (= real send).
+          # Automatic (cron) runs have no inputs, so these are empty there.
           DRY_RUN: ${{ github.event.inputs.dry_run }}
+          SEND_NOW: ${{ github.event.inputs.send_now }}
           RESEND: ${{ github.event.inputs.resend }}
           TARGET_DATE: ${{ github.event.inputs.target_date }}
           TEST_TO: ${{ github.event.inputs.test_to }}
+          TEST_SCHEDULE: ${{ github.event.inputs.test_schedule }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_MESSAGING_SERVICE_SID: ${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
           TWILIO_TEMPLATE_BUS_MORNING: ${{ secrets.TWILIO_TEMPLATE_BUS_MORNING }}
           TWILIO_TEMPLATE_BUS_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_BUS_AFTERNOON }}
           TWILIO_TEMPLATE_CAR_MORNING: ${{ secrets.TWILIO_TEMPLATE_CAR_MORNING }}
           TWILIO_TEMPLATE_CAR_AFTERNOON: ${{ secrets.TWILIO_TEMPLATE_CAR_AFTERNOON }}
 
-      # Runs even if some sends failed, so what DID go out is remembered.
-      - name: Save record of sent reminders
+      # Runs even if some steps failed, so what DID get scheduled/sent is remembered.
+      - name: Save record of scheduled and sent reminders
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .reminders-sent 2>/dev/null || true
           if git diff --cached --quiet; then
-            echo "No new sends to record."
+            echo "Nothing new to record."
           else
-            git commit -m "Record sent WhatsApp reminders [skip ci]"
+            git commit -m "Record scheduled/sent WhatsApp reminders [skip ci]"
             for i in 1 2 3; do
               git pull --rebase && git push && break
               sleep 5
