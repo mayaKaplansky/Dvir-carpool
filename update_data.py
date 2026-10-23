@@ -19,65 +19,61 @@ COUNT_SHEET = "ספירת הסעות למשפחה"
 
 
 def norm(x):
-    return str(x).strip() if x is not None else ""
+    """Trim, collapse repeated spaces, and drop invisible direction marks, so a
+    stray double space or hidden character can't break a name match."""
+    if x is None:
+        return ""
+    s = re.sub(r"[\u200e\u200f\u202a-\u202e\u00a0]", " ", str(x))
+    return re.sub(r"\s+", " ", s).strip()
 
 
-def build_phone_lookup(wb):
+def build_phone_lookup(wb, family_display_names):
     """
-    Re-derives each family's phone numbers from the roster tab, matching
-    families the same way the schedule was originally built: group student
-    rows by (father name, mother name), tolerating a phone number that's
-    filled in on one sibling's row but missing on another's.
+    For each family display name already listed in the count tab (which is
+    the single source of truth for "LastName - Father/Mother"), finds that
+    family's phone numbers by matching the Father/Mother portion directly
+    against the roster's father/mother columns.
+
+    Deliberately does NOT re-derive any family's last name from scratch --
+    splitting a combined "LastName FirstName" string is inherently
+    ambiguous (that's exactly the bug this replaced), so instead this
+    matches on the parent names, which are unambiguous columns in the
+    roster.
     """
     ws = wb[ROSTER_SHEET]
     rows = list(ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True))
-    # columns: שם תלמיד, כיתת אם, ישוב, אב, נייד, אם, נייד 2
     students = []
     for r in rows:
         if r[0] is None:
             continue
         students.append({
-            "name": norm(r[0]), "father": norm(r[3]), "father_mobile": norm(r[4]),
+            "father": norm(r[3]), "father_mobile": norm(r[4]),
             "mother": norm(r[5]), "mother_mobile": norm(r[6]),
         })
 
-    name_groups = {}
-    for s in students:
-        name_groups.setdefault((s["father"], s["mother"]), []).append(s)
-
-    def common_prefix(names):
-        token_lists = [n.split() for n in names]
-        minlen = min(len(t) for t in token_lists)
-        prefix = []
-        for i in range(minlen):
-            toks = set(t[i] for t in token_lists)
-            if len(toks) == 1:
-                prefix.append(token_lists[0][i])
-            else:
-                break
-        return prefix
-
     phones = {}
-    for (father, mother), members in name_groups.items():
-        names = [m["name"] for m in members]
-        if len(members) > 1:
-            prefix = common_prefix(names)
-            last_name = " ".join(prefix) if prefix else names[0].split()[0]
-        else:
-            toks = names[0].split()
-            last_name = toks[0] if len(toks) == 1 else " ".join(toks[:-1])
+    for display in family_display_names:
+        if " - " not in display:
+            continue
+        rest = display.split(" - ", 1)[1]
+        parts = rest.split("/")
+        name1 = parts[0].strip() if len(parts) > 0 else ""
+        name2 = parts[1].strip() if len(parts) > 1 else ""
 
-        if father and mother:
-            display = f"{last_name} - {father}/{mother}"
-        elif father:
-            display = f"{last_name} - {father}"
-        elif mother:
-            display = f"{last_name} - {mother}"
-        else:
-            display = last_name
+        name1, name2 = norm(name1), norm(name2)
 
-        fmob = next((m["father_mobile"] for m in members if m["father_mobile"]), "")
-        mmob = next((m["mother_mobile"] for m in members if m["mother_mobile"]), "")
+        # 1) best case: both parent names match the same roster row
+        matches = []
+        if name2:
+            matches = [s for s in students if s["father"] == name1 and s["mother"] == name2]
+        # 2) fallback: any row where one of the named parents matches
+        #    (also covers a single name, or father/mother entered in swapped columns)
+        if not matches:
+            names = {n for n in (name1, name2) if n}
+            matches = [s for s in students if s["father"] in names or s["mother"] in names]
+
+        fmob = next((m["father_mobile"] for m in matches if m["father_mobile"]), "")
+        mmob = next((m["mother_mobile"] for m in matches if m["mother_mobile"]), "")
         phones[display] = " / ".join(p for p in [fmob, mmob] if p)
 
     return phones
@@ -116,7 +112,7 @@ def main():
     fam_rows = list(ws3.iter_rows(min_row=2, max_row=ws3.max_row, values_only=True))
     families = sorted(set(r[0] for r in fam_rows if r[0]))
 
-    phones = build_phone_lookup(wb)
+    phones = build_phone_lookup(wb, families)
     # only keep phone entries relevant to current families (keeps the payload tidy)
     phones = {name: phones.get(name, "") for name in families}
 
@@ -149,6 +145,8 @@ def main():
     missing = [name for name in families if name not in phones or not phones[name]]
     if missing:
         print("No phone found for:", ", ".join(missing))
+        # Shows up as a yellow warning on the GitHub Actions run page
+        print("::warning title=Families with no phone number::" + ", ".join(missing))
 
 
 if __name__ == "__main__":
