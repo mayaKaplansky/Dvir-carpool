@@ -96,7 +96,10 @@ def main():
     ws = wb[SCHEDULE_SHEET]
     rows = list(ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True))
     schedule = []
-    for date, shift, b1, b2, b3, car in rows:
+    for row in rows:
+        # Only the first 6 columns matter (date, shift, bus1-3, car). Extra
+        # columns to the right (notes, stray formatting) are ignored.
+        date, shift, b1, b2, b3, car = (list(row) + [None] * 6)[:6]
         if date is None:
             continue
         schedule.append({
